@@ -115,9 +115,9 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     if (!stage || !pointer) return;
 
     const oldScale = imageNode.scaleX();
-    const scaleBy = 1.06;
+    const scaleBy = 1.04;
     const minScale = 1;
-    const maxScale = 10;
+    const maxScale = 100;
 
     const isZoomIn = e.evt.deltaY < 0 !== e.evt.ctrlKey;
     const newScale = Math.min(

@@ -5,8 +5,16 @@ import StatePanel from "./components/StatePanel";
 import Instructions from "./components/Instructions";
 import PreviewPanel from "./components/PreviewPanel";
 
-const IMAGE_URL =
-  "https://fastly.picsum.photos/id/45/4592/2576.jpg?hmac=Vc7_kMYufvy96FxocZ1Zx6DR1PNsNQXF4XUw1mZ2dlc";
+const IMAGE_URL_1 =
+  "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049698/1_icb054.jpg";
+const IMAGE_URL_2 =
+  "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049682/3_gj0v8m.jpg";
+const IMAGE_URL_3 =
+  "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049685/4_hxekyn.jpg";
+const IMAGE_URL_4 =
+  "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049687/2_jnj97a.jpg";
+
+const IMAGE_URLS = [IMAGE_URL_1, IMAGE_URL_2, IMAGE_URL_3, IMAGE_URL_4];
 
 const App = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -25,11 +33,8 @@ const App = () => {
   return (
     <div className="container">
       <div className="sidebar">
-        <PreviewPanel 
-          previewUrl={previewUrl}
-          defaultImageUrl={IMAGE_URL}
-        />
-        <StatePanel 
+        <PreviewPanel previewUrl={previewUrl} defaultImageUrl={IMAGE_URL_1} />
+        <StatePanel
           isDragging={isDragging}
           isZooming={isZooming}
           isSelecting={isSelecting}
@@ -41,38 +46,18 @@ const App = () => {
 
       <div className="content-wrapper">
         <div className="grid-container">
-          <KonvaViewer
-            imageUrl={IMAGE_URL}
-            onDragStateChange={setIsDragging}
-            onZoomStateChange={setIsZooming}
-            onSelectStateChange={setIsSelecting}
-            onResetStateChange={setIsResetting}
-            onSelectionBlob={handleSelectionBlob}
-          />
-          <KonvaViewer
-            imageUrl={IMAGE_URL}
-            onDragStateChange={setIsDragging}
-            onZoomStateChange={setIsZooming}
-            onSelectStateChange={setIsSelecting}
-            onResetStateChange={setIsResetting}
-            onSelectionBlob={handleSelectionBlob}
-          />
-          <KonvaViewer
-            imageUrl={IMAGE_URL}
-            onDragStateChange={setIsDragging}
-            onZoomStateChange={setIsZooming}
-            onSelectStateChange={setIsSelecting}
-            onResetStateChange={setIsResetting}
-            onSelectionBlob={handleSelectionBlob}
-          />
-          <KonvaViewer
-            imageUrl={IMAGE_URL}
-            onDragStateChange={setIsDragging}
-            onZoomStateChange={setIsZooming}
-            onSelectStateChange={setIsSelecting}
-            onResetStateChange={setIsResetting}
-            onSelectionBlob={handleSelectionBlob}
-          />
+          {IMAGE_URLS.map((imageUrl, index) => (
+            <KonvaViewer
+              key={index}
+                imageUrl={imageUrl}
+                onDragStateChange={setIsDragging}
+                onZoomStateChange={setIsZooming}
+                onSelectStateChange={setIsSelecting}
+                onResetStateChange={setIsResetting}
+                onSelectionBlob={handleSelectionBlob}
+              />
+            )
+          )}
         </div>
       </div>
     </div>
