@@ -1,0 +1,43 @@
+.instructions-container {
+  padding: 16px;
+  background-color: rgba(143, 143, 143, 0.411);
+  border-radius: 10px;
+}
+
+.instructions-section h3,
+.selection-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: black;
+}
+
+.instructions-section ul {
+  margin: 0;
+  padding-left: 20px;
+  color: black;
+  list-style-type: none;
+}
+
+.instructions-section li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  position: relative;
+}
+
+.instructions-section li::before {
+  content: "•";
+  color: #4CAF50;
+  position: absolute;
+  left: -15px;
+}
+
+.selection-info {
+  margin-top: 20px;
+}
+
+.selection-info p {
+  margin: 0;
+  color: black;
+  font-size: 14px;
+  line-height: 1.5;
+} 

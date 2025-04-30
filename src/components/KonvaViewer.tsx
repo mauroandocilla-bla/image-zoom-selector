@@ -4,10 +4,15 @@ import useImage from "use-image";
 import "./KonvaViewer.css";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
+import { ZoomIcon, DragIcon, SelectIcon, ResetIcon } from "./icons";
+import Tooltip from "./Tooltip";
 
 interface KonvaViewerProps {
   imageUrl: string;
   onDragStateChange?: (isDragging: boolean) => void;
+  onZoomStateChange?: (isZooming: boolean) => void;
+  onSelectStateChange?: (isSelecting: boolean) => void;
+  onResetStateChange?: (isResetting: boolean) => void;
   onSelectionBlob?: (blob: Blob) => void;
 }
 
@@ -29,6 +34,9 @@ const normalizeRect = (rect: SelectionRect) => {
 const KonvaViewer: React.FC<KonvaViewerProps> = ({
   imageUrl,
   onDragStateChange,
+  onZoomStateChange,
+  onSelectStateChange,
+  onResetStateChange,
   onSelectionBlob,
 }) => {
   const [img] = useImage(imageUrl, "anonymous");
@@ -36,6 +44,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
   const stageRef = useRef<Konva.Stage>(null);
   const imageNodeRef = useRef<Konva.Image>(null);
   const selectionRectRef = useRef<Konva.Rect>(null);
+  const zoomTimeoutRef = useRef<NodeJS.Timeout>();
 
   // State to track current scale and dimensions
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -62,6 +71,11 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     y: number;
   } | null>(null);
 
+  const [isZooming, setIsZooming] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isComponentFocused, setIsComponentFocused] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
   const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
     const node = e.target;
     const { width, height } = node.getClientRect();
@@ -83,6 +97,17 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
 
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
+    setIsZooming(true);
+
+    // Clear any existing timeout
+    if (zoomTimeoutRef.current) {
+      clearTimeout(zoomTimeoutRef.current);
+    }
+
+    // Set a new timeout
+    zoomTimeoutRef.current = setTimeout(() => {
+      setIsZooming(false);
+    }, 300);
 
     const imageNode = e.target;
     const stage = imageNode.getStage();
@@ -167,13 +192,11 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
 
     const selection = normalizeRect(selectionRect);
 
-    // 1. Ocultar el rectángulo de selección
     if (selectionRectRef.current) {
       selectionRectRef.current.visible(false);
       selectionRectRef.current.getLayer()?.batchDraw();
     }
 
-    // 2. Capturar la selección del Stage sin el rectángulo
     const canvas = stageRef.current.toCanvas({
       x: selection.x,
       y: selection.y,
@@ -182,7 +205,6 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     });
 
     canvas.toBlob((blob) => {
-      // 3. Volver a mostrar el rectángulo de selección
       if (selectionRectRef.current) {
         selectionRectRef.current.visible(true);
         selectionRectRef.current.getLayer()?.batchDraw();
@@ -195,6 +217,16 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
 
     setSelectionStart(null);
     setSelectionRect({ x: 0, y: 0, width: 0, height: 0 });
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+    if (onDragStateChange) onDragStateChange(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    if (onDragStateChange) onDragStateChange(false);
   };
 
   // Function to handle resize
@@ -248,36 +280,134 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Shift") setIsSelecting(true);
+      if (e.key === "Shift" && isComponentFocused) {
+        setIsSelecting(true);
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Shift") setIsSelecting(false);
-      setSelectionStart(null); // Reset
+      if (e.key === "Shift") {
+        setIsSelecting(false);
+        setSelectionStart(null);
+      }
+    };
+
+    const handleFocus = () => {
+      setIsComponentFocused(true);
+    };
+
+    const handleBlur = () => {
+      setIsComponentFocused(false);
+      setIsSelecting(false);
+      setSelectionStart(null);
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [isComponentFocused]);
+
+  const handleDoubleClick = () => {
+    if (!imageNodeRef.current) return;
+
+    setIsResetting(true);
+    setTimeout(() => setIsResetting(false), 500);
+
+    // Reset scale to 1
+    imageNodeRef.current.scale({ x: 1, y: 1 });
+
+    // Reset position to center
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+    const imageWidth = imageNodeRef.current.width();
+    const imageHeight = imageNodeRef.current.height();
+
+    const x = (stageWidth - imageWidth) / 2;
+    const y = (stageHeight - imageHeight) / 2;
+
+    imageNodeRef.current.position({ x, y });
+    imageNodeRef.current.getLayer()?.batchDraw();
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (zoomTimeoutRef.current) {
+        clearTimeout(zoomTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (onZoomStateChange) {
+      onZoomStateChange(isZooming);
+    }
+  }, [isZooming, onZoomStateChange]);
+
+  useEffect(() => {
+    if (onSelectStateChange) {
+      onSelectStateChange(isSelecting);
+    }
+  }, [isSelecting, onSelectStateChange]);
+
+  useEffect(() => {
+    if (onResetStateChange) {
+      onResetStateChange(isResetting);
+    }
+  }, [isResetting, onResetStateChange]);
 
   return (
     <div
       ref={containerRef}
-      style={{ width: "100%", height: "600px" }}
-      className="konva-container">
+      className="konva-container"
+      onMouseEnter={() => setIsComponentFocused(true)}
+      onMouseLeave={() => setIsComponentFocused(false)}>
+      <div className="state-indicators">
+        <div className="indicators-group">
+          <div className="state-indicators-label">State Indicators</div>
+          <div className="indicators-list">
+            <Tooltip content="Use mouse wheel to zoom in/out">
+              <div className={`indicator ${isZooming ? "active" : ""}`}>
+                <ZoomIcon />
+              </div>
+            </Tooltip>
+            <Tooltip content="Click and drag to move the image">
+              <div className={`indicator ${isDragging ? "active" : ""}`}>
+                <DragIcon />
+              </div>
+            </Tooltip>
+            <Tooltip content="Hold Shift and drag to select an area">
+              <div className={`indicator ${isSelecting ? "active" : ""}`}>
+                <SelectIcon />
+              </div>
+            </Tooltip>
+            <Tooltip content="Double click to reset view">
+              <div className={`indicator ${isResetting ? "active" : ""}`}>
+                <ResetIcon />
+              </div>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
       <Stage
         ref={stageRef}
         width={stageSize.width}
         height={stageSize.height}
-        style={{ backgroundColor: "yellow" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}>
+        onMouseUp={handleMouseUp}
+        onDblClick={handleDoubleClick}>
         <Layer>
           <Image
             ref={imageNodeRef}
@@ -289,6 +419,8 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
             draggable={!isSelecting}
             onDragMove={handleDragMove}
             onWheel={handleWheel}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           />
           {isSelecting && (
             <Rect

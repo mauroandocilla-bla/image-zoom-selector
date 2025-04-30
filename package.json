@@ -10,6 +10,7 @@
   "main": "src/index.tsx",
   "dependencies": {
     "konva": "^9.3.20",
+    "lucide-react": "^0.503.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-konva": "18.2.10",

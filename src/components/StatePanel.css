@@ -1,0 +1,65 @@
+.state-panel {
+  display: block;
+}
+
+.state-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.state-title {
+  margin: 0;
+  font-size: 16px;
+  color: black;
+}
+
+.active-viewer {
+  font-size: 14px;
+  color: #666;
+  background-color: rgba(143, 143, 143, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.canvas-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(143, 143, 143, 0.411);
+  border-radius: 6px;
+}
+
+.state-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: black;
+  font-size: 16px;
+  padding: 0 4px;
+}
+
+.state-indicator svg {
+  width: 16px;
+  height: 16px;
+}
+
+.state-indicator span {
+  flex: 1;
+}
+
+.indicator-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: rgba(112, 112, 112, 0.3);
+  transition: background-color 0.2s ease;
+  margin-left: auto;
+}
+
+.indicator-dot.active {
+  background-color: #4CAF50;
+} 
