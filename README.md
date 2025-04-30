@@ -56,3 +56,43 @@ Preview production build:
 ```bash
 pnpm preview
 ```
+
+## 🌐 Deploy to GitHub Pages
+
+1. Make sure your repository is on GitHub and you have write access.
+
+2. Install the `gh-pages` dependency:
+```bash
+pnpm add -D gh-pages
+```
+
+3. Add the following scripts to your `package.json`:
+```json
+{
+  "scripts": {
+    "predeploy": "pnpm build",
+    "deploy": "gh-pages -d dist"
+  }
+}
+```
+
+4. Configure the `homepage` field in your `package.json`:
+```json
+{
+  "homepage": "https://[your-username].github.io/image-zoom-selector/"
+}
+```
+
+5. Deploy to GitHub Pages:
+```bash
+pnpm deploy
+```
+
+6. Go to your repository settings on GitHub:
+   - Navigate to Settings > Pages
+   - Under "Source", select "gh-pages" branch
+   - Save the changes
+
+Your application will be available at: `https://[your-username].github.io/image-zoom-selector/`
+
+> Note: Make sure the `base` value in `vite.config.ts` matches your repository name.
