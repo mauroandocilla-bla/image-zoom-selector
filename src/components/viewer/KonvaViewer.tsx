@@ -4,8 +4,8 @@ import useImage from "use-image";
 import "./KonvaViewer.css";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
-import { ZoomIcon, DragIcon, SelectIcon, ResetIcon } from "./icons";
-import Tooltip from "./Tooltip";
+import { ZoomIcon, DragIcon, SelectIcon, ResetIcon } from "../common/icons";
+import Tooltip from "../common/Tooltip";
 
 interface KonvaViewerProps {
   imageUrl: string;
@@ -44,7 +44,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
   const stageRef = useRef<Konva.Stage>(null);
   const imageNodeRef = useRef<Konva.Image>(null);
   const selectionRectRef = useRef<Konva.Rect>(null);
-  const zoomTimeoutRef = useRef<NodeJS.Timeout>();
+  const zoomTimeoutRef = useRef<number>();
 
   // State to track current scale and dimensions
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -107,7 +107,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     // Set a new timeout
     zoomTimeoutRef.current = setTimeout(() => {
       setIsZooming(false);
-    }, 300);
+    }, 100);
 
     const imageNode = e.target;
     const stage = imageNode.getStage();
@@ -197,23 +197,84 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
       selectionRectRef.current.getLayer()?.batchDraw();
     }
 
-    const canvas = stageRef.current.toCanvas({
-      x: selection.x,
-      y: selection.y,
-      width: selection.width,
-      height: selection.height,
-    });
+    // Obtener el nodo de la imagen
+    const imageNode = imageNodeRef.current;
+    if (!imageNode) return;
 
-    canvas.toBlob((blob) => {
-      if (selectionRectRef.current) {
-        selectionRectRef.current.visible(true);
-        selectionRectRef.current.getLayer()?.batchDraw();
-      }
+    const stage = stageRef.current;
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+    
+    // Calcular la escala necesaria para que la selección ocupe exactamente el stage
+    const scaleX = stageWidth / selection.width;
+    const scaleY = stageHeight / selection.height;
+    const newScale = Math.min(scaleX, scaleY);
 
-      if (blob && onSelectionBlob) {
-        onSelectionBlob(blob);
-      }
-    }, "image/png");
+    // Obtener la escala actual y asegurar que el nuevo zoom sea significativamente mayor
+    const currentScale = imageNode.scaleX();
+    const finalScale = Math.max(newScale, currentScale * 2); // Asegurar al menos un zoom 2x
+
+    // Obtener la posición actual de la imagen
+    const currentX = imageNode.x();
+    const currentY = imageNode.y();
+
+    // Calcular el centro de la selección en coordenadas del stage
+    const selectionCenterX = selection.x + selection.width / 2;
+    const selectionCenterY = selection.y + selection.height / 2;
+
+    // Convertir el centro de la selección a coordenadas relativas a la imagen
+    const relativeCenterX = (selectionCenterX - currentX) / currentScale;
+    const relativeCenterY = (selectionCenterY - currentY) / currentScale;
+
+    // Calcular la nueva posición para centrar la selección
+    let newX = stageWidth / 2 - relativeCenterX * finalScale;
+    let newY = stageHeight / 2 - relativeCenterY * finalScale;
+
+    // Calcular los límites para mantener la imagen dentro del stage
+    const imageWidth = imageNode.width() * finalScale;
+    const imageHeight = imageNode.height() * finalScale;
+
+    // Asegurar que la imagen no se salga del stage
+    const minX = Math.min(0, stageWidth - imageWidth);
+    const minY = Math.min(0, stageHeight - imageHeight);
+    const maxX = 0;
+    const maxY = 0;
+
+    // Aplicar los límites
+    newX = Math.max(minX, Math.min(newX, maxX));
+    newY = Math.max(minY, Math.min(newY, maxY));
+
+    // Aplicar el zoom y la posición
+    imageNode.scale({ x: finalScale, y: finalScale });
+    imageNode.position({ x: newX, y: newY });
+    imageNode.getLayer()?.batchDraw();
+
+    // Esperar a que el zoom se complete antes de capturar
+    setTimeout(() => {
+      // Calcular las coordenadas de la selección después del zoom
+      const scaledSelectionX = (selection.x - currentX) / currentScale * finalScale + newX;
+      const scaledSelectionY = (selection.y - currentY) / currentScale * finalScale + newY;
+      const scaledSelectionWidth = selection.width / currentScale * finalScale;
+      const scaledSelectionHeight = selection.height / currentScale * finalScale;
+
+      const canvas = stage.toCanvas({
+        x: scaledSelectionX,
+        y: scaledSelectionY,
+        width: scaledSelectionWidth,
+        height: scaledSelectionHeight,
+      });
+
+      canvas.toBlob((blob) => {
+        if (selectionRectRef.current) {
+          selectionRectRef.current.visible(true);
+          selectionRectRef.current.getLayer()?.batchDraw();
+        }
+
+        if (blob && onSelectionBlob) {
+          onSelectionBlob(blob);
+        }
+      }, "image/png");
+    }, 100);
 
     setSelectionStart(null);
     setSelectionRect({ x: 0, y: 0, width: 0, height: 0 });
@@ -288,8 +349,8 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === "Shift") {
         setIsSelecting(false);
-        setSelectionStart(null);
       }
+      setSelectionStart(null);
     };
 
     const handleFocus = () => {
@@ -319,7 +380,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     if (!imageNodeRef.current) return;
 
     setIsResetting(true);
-    setTimeout(() => setIsResetting(false), 500);
+    setTimeout(() => setIsResetting(false), 100);
 
     // Reset scale to 1
     imageNodeRef.current.scale({ x: 1, y: 1 });

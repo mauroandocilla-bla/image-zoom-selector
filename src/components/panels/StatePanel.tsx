@@ -1,6 +1,6 @@
 import React from "react";
 import "./StatePanel.css";
-import { ZoomIcon, DragIcon, SelectIcon, ResetIcon } from "./icons";
+import { ZoomIcon, DragIcon, SelectIcon, ResetIcon } from "../common/icons";
 
 interface StatePanelProps {
   isDragging: boolean;

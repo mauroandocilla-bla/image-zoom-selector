@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "./styles.css";
-import KonvaViewer from "./components/KonvaViewer";
-import StatePanel from "./components/StatePanel";
-import Instructions from "./components/Instructions";
-import PreviewPanel from "./components/PreviewPanel";
+import KonvaViewer from "./components/viewer/KonvaViewer";
+import StatePanel from "./components/panels/StatePanel";
+import Instructions from "./components/instructions/Instructions";
+import PreviewPanel from "./components/panels/PreviewPanel";
 
 const IMAGE_URL_1 =
   "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049698/1_icb054.jpg";
