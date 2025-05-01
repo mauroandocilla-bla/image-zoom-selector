@@ -44,7 +44,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
   const stageRef = useRef<Konva.Stage>(null);
   const imageNodeRef = useRef<Konva.Image>(null);
   const selectionRectRef = useRef<Konva.Rect>(null);
-  const zoomTimeoutRef = useRef<number>();
+  const zoomTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // State to track current scale and dimensions
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
