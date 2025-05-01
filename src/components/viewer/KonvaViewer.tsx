@@ -150,7 +150,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     newX = Math.max(minX, Math.min(newX, maxX));
     newY = Math.max(minY, Math.min(newY, maxY));
 
-    // Aplicar escala y posición
+    // Apply scale and position
     imageNode.scale({ x: newScale, y: newScale });
     imageNode.position({ x: newX, y: newY });
   };
@@ -197,7 +197,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
       selectionRectRef.current.getLayer()?.batchDraw();
     }
 
-    // Obtener el nodo de la imagen
+    // Get the image node
     const imageNode = imageNodeRef.current;
     if (!imageNode) return;
 
@@ -205,53 +205,53 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     const stageWidth = stage.width();
     const stageHeight = stage.height();
     
-    // Calcular la escala necesaria para que la selección ocupe exactamente el stage
+    // Calculate the scale needed to make the selection occupy exactly the stage
     const scaleX = stageWidth / selection.width;
     const scaleY = stageHeight / selection.height;
     const newScale = Math.min(scaleX, scaleY);
 
-    // Obtener la escala actual y asegurar que el nuevo zoom sea significativamente mayor
+    // Get current scale and ensure the new zoom is significantly larger
     const currentScale = imageNode.scaleX();
-    const finalScale = Math.max(newScale, currentScale * 2); // Asegurar al menos un zoom 2x
+    const finalScale = Math.max(newScale, currentScale * 2); // Ensure at least 2x zoom
 
-    // Obtener la posición actual de la imagen
+    // Get current image position
     const currentX = imageNode.x();
     const currentY = imageNode.y();
 
-    // Calcular el centro de la selección en coordenadas del stage
+    // Calculate selection center in stage coordinates
     const selectionCenterX = selection.x + selection.width / 2;
     const selectionCenterY = selection.y + selection.height / 2;
 
-    // Convertir el centro de la selección a coordenadas relativas a la imagen
+    // Convert selection center to image-relative coordinates
     const relativeCenterX = (selectionCenterX - currentX) / currentScale;
     const relativeCenterY = (selectionCenterY - currentY) / currentScale;
 
-    // Calcular la nueva posición para centrar la selección
+    // Calculate new position to center the selection
     let newX = stageWidth / 2 - relativeCenterX * finalScale;
     let newY = stageHeight / 2 - relativeCenterY * finalScale;
 
-    // Calcular los límites para mantener la imagen dentro del stage
+    // Calculate limits to keep image within stage
     const imageWidth = imageNode.width() * finalScale;
     const imageHeight = imageNode.height() * finalScale;
 
-    // Asegurar que la imagen no se salga del stage
+    // Ensure image stays within stage boundaries
     const minX = Math.min(0, stageWidth - imageWidth);
     const minY = Math.min(0, stageHeight - imageHeight);
     const maxX = 0;
     const maxY = 0;
 
-    // Aplicar los límites
+    // Apply limits
     newX = Math.max(minX, Math.min(newX, maxX));
     newY = Math.max(minY, Math.min(newY, maxY));
 
-    // Aplicar el zoom y la posición
+    // Apply zoom and position
     imageNode.scale({ x: finalScale, y: finalScale });
     imageNode.position({ x: newX, y: newY });
     imageNode.getLayer()?.batchDraw();
 
-    // Esperar a que el zoom se complete antes de capturar
+    // Wait for zoom to complete before capturing
     setTimeout(() => {
-      // Calcular las coordenadas de la selección después del zoom
+      // Calculate selection coordinates after zoom
       const scaledSelectionX = (selection.x - currentX) / currentScale * finalScale + newX;
       const scaledSelectionY = (selection.y - currentY) / currentScale * finalScale + newY;
       const scaledSelectionWidth = selection.width / currentScale * finalScale;
