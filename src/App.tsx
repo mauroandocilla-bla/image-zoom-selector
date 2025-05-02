@@ -34,6 +34,7 @@ const App = () => {
   };
 
   const handleOptionChange = (index: number) => {
+    setPreviewUrl(null);
     setSelectedOption(index);
   };
 
