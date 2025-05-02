@@ -1,85 +1,142 @@
-import React from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import { Rect as KonvaRect } from "react-konva";
+import Konva from "konva";
 
 interface MiniMapProps {
-  imageWidth: number;
-  imageHeight: number;
-  viewportX: number;
-  viewportY: number;
-  viewportWidth: number;
-  viewportHeight: number;
-  scale: number;
+  stageRef: React.RefObject<Konva.Stage>;
+  imageRef: React.RefObject<Konva.Image>;
   containerWidth: number;
   containerHeight: number;
 }
 
+interface ViewportState {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale: number;
+  imageWidth: number;
+  imageHeight: number;
+}
+
 const MiniMap: React.FC<MiniMapProps> = ({
-  imageWidth,
-  imageHeight,
-  viewportX,
-  viewportY,
-  viewportWidth,
-  viewportHeight,
-  scale,
+  stageRef,
+  imageRef,
   containerWidth,
   containerHeight,
 }) => {
-  // Calculate the size of the mini-map (20% of the container)
-  const miniMapWidth = containerWidth * 0.2;
-  const miniMapHeight = containerHeight * 0.2;
+  const [updateTrigger, setUpdateTrigger] = useState(0);
+  const prevStateRef = useRef<ViewportState>({
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 1,
+    scale: 1,
+    imageWidth: 1,
+    imageHeight: 1,
+  });
 
-  // Calculate the aspect ratio of the image
-  const imageAspectRatio = imageWidth / imageHeight;
+  const getViewportState = (): ViewportState | null => {
+    const stage = stageRef.current;
+    const image = imageRef.current;
 
-  // Calculate the mini-map dimensions while maintaining aspect ratio
-  let miniMapImageWidth = miniMapWidth;
-  let miniMapImageHeight = miniMapWidth / imageAspectRatio;
+    if (!stage || !image) return null;
 
-  if (miniMapImageHeight > miniMapHeight) {
-    miniMapImageHeight = miniMapHeight;
-    miniMapImageWidth = miniMapHeight * imageAspectRatio;
-  }
+    const scale = image.scaleX();
+    return {
+      x: image.x(),
+      y: image.y(),
+      width: image.width() * scale,
+      height: image.height() * scale,
+      scale,
+      imageWidth: image.width(),
+      imageHeight: image.height(),
+    };
+  };
 
-  // Calculate the position of the mini-map (bottom right corner)
-  const miniMapX = containerWidth - miniMapImageWidth - 10;
-  const miniMapY = containerHeight - miniMapImageHeight - 10;
+  const shallowEqual = (a: ViewportState, b: ViewportState): boolean => {
+    return (
+      a.x === b.x &&
+      a.y === b.y &&
+      a.width === b.width &&
+      a.height === b.height &&
+      a.scale === b.scale &&
+      a.imageWidth === b.imageWidth &&
+      a.imageHeight === b.imageHeight
+    );
+  };
 
-  // Calculate the scaled image dimensions
-  const scaledImageWidth = imageWidth * scale;
-  const scaledImageHeight = imageHeight * scale;
+  useEffect(() => {
+    let animationFrameId: number;
+    let isMounted = true;
 
-  // Calculate the viewport rectangle in mini-map coordinates
-  // The viewport size is inversely proportional to the scale
-  const viewportRectWidth =
-    (viewportWidth / scaledImageWidth) * miniMapImageWidth;
-  const viewportRectHeight =
-    (viewportHeight / scaledImageHeight) * miniMapImageHeight;
+    const loop = () => {
+      if (!isMounted) return;
 
-  // Calculate the viewport position, taking into account the image position and scale
-  const viewportRectX =
-    miniMapX + (-viewportX / scaledImageWidth) * miniMapImageWidth;
-  const viewportRectY =
-    miniMapY + (-viewportY / scaledImageHeight) * miniMapImageHeight;
+      const newState = getViewportState();
+      if (newState && !shallowEqual(newState, prevStateRef.current)) {
+        prevStateRef.current = newState;
+        setUpdateTrigger((prev) => prev + 1); // Trigger re-render
+      }
+
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    animationFrameId = requestAnimationFrame(loop);
+
+    return () => {
+      isMounted = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  // Memoize calculations that depend on container size
+  const miniMapDimensions = useMemo(() => {
+    const miniMapWidth = 100;
+    const ratio =
+      prevStateRef.current.imageWidth / prevStateRef.current.imageHeight || 1;
+  
+    let miniW = miniMapWidth;
+    let miniH = miniW / ratio;
+  
+    return {
+      miniW,
+      miniH,
+      miniX: containerWidth - miniW - 20,
+      miniY: containerHeight - miniH - 20,
+    };
+  }, [containerWidth, containerHeight, updateTrigger]); // Add updateTrigger to dependencies
+
+  // Memoize viewport rectangle calculations
+  const viewportRect = useMemo(() => {
+    const { miniW, miniH, miniX, miniY } = miniMapDimensions;
+    const state = prevStateRef.current;
+
+    return {
+      width: (containerWidth / state.width) * miniW,
+      height: (containerHeight / state.height) * miniH,
+      x: miniX + (-state.x / state.width) * miniW,
+      y: miniY + (-state.y / state.height) * miniH,
+    };
+  }, [miniMapDimensions, containerWidth, containerHeight, updateTrigger]); // Add updateTrigger to dependencies
 
   return (
     <>
-      {/* Full image rectangle */}
       <KonvaRect
-        x={miniMapX}
-        y={miniMapY}
-        width={miniMapImageWidth}
-        height={miniMapImageHeight}
-        fill="rgba(0, 0, 0, 0.5)"
+        x={miniMapDimensions.miniX}
+        y={miniMapDimensions.miniY}
+        width={miniMapDimensions.miniW}
+        height={miniMapDimensions.miniH}
+        fill="rgba(0, 30, 255, 0.5)"
         cornerRadius={4}
         listening={false}
       />
-      {/* Viewport rectangle */}
       <KonvaRect
-        x={viewportRectX}
-        y={viewportRectY}
-        width={viewportRectWidth}
-        height={viewportRectHeight}
-        fill="rgba(0, 162, 255, 0.3)"
+        x={viewportRect.x}
+        y={viewportRect.y}
+        width={viewportRect.width}
+        height={viewportRect.height}
+        fill="rgba(51, 255, 0, 0.5)"
         strokeWidth={1}
         cornerRadius={2}
         listening={false}

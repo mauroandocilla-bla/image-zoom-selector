@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { Stage, Layer, Image, Rect as KonvaRect, Group } from "react-konva";
 import useImage from "use-image";
 import "./ImageViewer.css";
@@ -32,62 +32,13 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   onSelectionBlob,
 }) => {
   const [image] = useImage(imageUrl, "anonymous");
-  const [brightness, setBrightness] = useState(0);
-  const [viewportState, setViewportState] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-    scale: 1
-  });
 
   const stageRef = useRef<Konva.Stage>(null);
   const brightnessRef = useRef<Konva.Rect>(null);
   const imageRef = useRef<Konva.Image>(null);
   const selectionRef = useRef<Konva.Rect>(null);
 
-  // Update viewport state on stage changes
-  useEffect(() => {
-    const updateViewport = () => {
-      if (stageRef.current && imageRef.current) {
-        const stage = stageRef.current;
-        const image = imageRef.current;
-        
-        setViewportState({
-          x: image.x(),
-          y: image.y(),
-          width: stage.width(),
-          height: stage.height(),
-          scale: image.scaleX()
-        });
-      }
-    };
-
-    // Update on mount
-    updateViewport();
-
-    // Update on stage changes
-    const stage = stageRef.current;
-    if (stage) {
-      stage.on('transform', updateViewport);
-      stage.on('dragmove', updateViewport);
-      stage.on('wheel', updateViewport);
-      stage.on('dblclick', updateViewport);
-      stage.on('mousedown', updateViewport);
-      stage.on('mouseup', updateViewport);
-    }
-
-    return () => {
-      if (stage) {
-        stage.off('transform', updateViewport);
-        stage.off('dragmove', updateViewport);
-        stage.off('wheel', updateViewport);
-        stage.off('dblclick', updateViewport);
-        stage.off('mousedown', updateViewport);
-        stage.off('mouseup', updateViewport);
-      }
-    };
-  }, []);
+  const [brightness, setBrightness] = useState(0);
 
   const { isZooming, handleWheel } = useImageZoom({ onZoomStateChange });
   const { isDragging, handleDragMove, handleDragStart, handleDragEnd } =
@@ -118,25 +69,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     containerSize: stageSize,
   });
 
-  // Update viewport when image is loaded and positioned
-  useEffect(() => {
-    if (image && imageRef.current && stageRef.current) {
-      const stage = stageRef.current;
-      const imageNode = imageRef.current;
-      
-      // Wait for the next frame to ensure image is positioned
-      requestAnimationFrame(() => {
-        setViewportState({
-          x: imageNode.x(),
-          y: imageNode.y(),
-          width: stage.width(),
-          height: stage.height(),
-          scale: imageNode.scaleX()
-        });
-      });
-    }
-  }, [image, imageProps, isResetting, isSelecting]);
-
   return (
     <div
       ref={containerRef}
@@ -154,7 +86,9 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         isSelecting={isSelecting}
         isResetting={isResetting}
       />
-      <ViewportDebug stageRef={stageRef} imageRef={imageRef} />
+      {process.env.NODE_ENV === "development" && (
+        <ViewportDebug stageRef={stageRef} imageRef={imageRef} />
+      )}
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -206,13 +140,8 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
           )}
           {image && (
             <MiniMap
-              imageWidth={imageProps.width}
-              imageHeight={imageProps.height}
-              viewportX={viewportState.x}
-              viewportY={viewportState.y}
-              viewportWidth={viewportState.width}
-              viewportHeight={viewportState.height}
-              scale={viewportState.scale}
+              stageRef={stageRef}
+              imageRef={imageRef}
               containerWidth={stageSize.width}
               containerHeight={stageSize.height}
             />

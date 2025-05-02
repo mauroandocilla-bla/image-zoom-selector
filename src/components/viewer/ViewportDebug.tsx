@@ -84,7 +84,7 @@ const ViewportDebug: React.FC<ViewportDebugProps> = ({
     <div
       style={{
         position: "absolute",
-        top: 10,
+        bottom: 10,
         left: 10,
         backgroundColor: "rgba(0, 0, 0, 0.7)",
         color: "white",
