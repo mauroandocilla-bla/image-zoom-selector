@@ -7,23 +7,21 @@ interface BehaviorPanelProps {
   onOptionChange: (index: number) => void;
 }
 
+const behaviorLabels: Record<number, string> = {
+  0: "Navigate, Zoom, and Preview",
+  1: "Click & Drag",
+  2: "Mouse Scroll",
+};
+
 const BehaviorPanel: React.FC<BehaviorPanelProps> = ({
   selectedOption,
   onOptionChange,
 }) => {
+  const label = behaviorLabels[selectedOption] || "Default";
+
   return (
     <div className="behavior-panel">
-      <h3 className="panel-title">
-        UX Behavior{" ("}
-        {selectedOption === 0
-          ? "Navigate, Zoom, and Preview"
-          : selectedOption === 1
-          ? "Click & Drag"
-          : selectedOption === 2
-          ? "Mouse Scroll"
-          : "Default"}
-        {")"}
-      </h3>
+      <h3 className="panel-title">UX Behavior ({label})</h3>
       <div className="panel-content">
         <MultiOptionSwitch
           options={["1", "2"]}
