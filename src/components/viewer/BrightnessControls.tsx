@@ -5,13 +5,19 @@ import "./BrightnessControls.css";
 
 interface BrightnessControlsProps {
   onBrightnessChange?: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 const BrightnessControls: React.FC<BrightnessControlsProps> = ({
   onBrightnessChange,
+  min = 0,
+  max = 1,
+  step = 0.01,
 }) => {
   const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
-  const [brightness, setBrightness] = useState(100);
+  const [brightness, setBrightness] = useState(min);
 
   const handleBrightnessChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
@@ -32,8 +38,9 @@ const BrightnessControls: React.FC<BrightnessControlsProps> = ({
         <div className="brightness-slider-container">
           <input
             type="range"
-            min="0"
-            max="200"
+            min={min}
+            max={max}
+            step={step}
             value={brightness}
             onChange={handleBrightnessChange}
             className="brightness-slider"
