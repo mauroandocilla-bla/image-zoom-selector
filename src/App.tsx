@@ -41,7 +41,7 @@ const App = () => {
   return (
     <div className="container">
       <div className="sidebar">
-        <PreviewPanel previewUrl={previewUrl} defaultImageUrl={IMAGE_URL_1} />
+        <PreviewPanel previewUrl={previewUrl}/>
         <BehaviorPanel
           selectedOption={selectedOption}
           onOptionChange={handleOptionChange}

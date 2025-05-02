@@ -3,10 +3,9 @@ import "./PreviewPanel.css";
 
 interface PreviewPanelProps {
   previewUrl: string | null;
-  defaultImageUrl: string;
 }
 
-const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewUrl, defaultImageUrl }) => {
+const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewUrl }) => {
   return (
     <div className="preview-panel">
       <h3 className="preview-title">Selected Area Preview</h3>
@@ -14,9 +13,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewUrl, defaultImageUrl
         id="preview"
         className="preview"
         style={{
-          backgroundImage: previewUrl
-            ? `url(${previewUrl})`
-            : `url(${defaultImageUrl})`,
+          backgroundImage: previewUrl ? `url(${previewUrl})` : "none",
           backgroundSize: "contain",
           backgroundPosition: "center",
         }}
@@ -25,4 +22,4 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewUrl, defaultImageUrl
   );
 };
 
-export default PreviewPanel; 
+export default PreviewPanel;
