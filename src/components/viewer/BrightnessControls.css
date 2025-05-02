@@ -9,6 +9,32 @@
   align-items: center;
 }
 
+.brightness-button-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.brightness-value {
+  position: absolute;
+  font-size: 1rem;
+  color: #333;
+  text-align: right;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  z-index: 0;
+  padding-left: 35px;
+  padding-top: 1px;
+  padding-right: 5px;
+  margin-left: 10px;
+  border: 1px solid #e0e0e0;
+}
+
 .brightness-button {
   width: 40px;
   height: 40px;
@@ -21,6 +47,7 @@
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  z-index: 1;
 }
 
 .brightness-button:hover {

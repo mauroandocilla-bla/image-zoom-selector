@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { Stage, Layer, Image, Rect as KonvaRect } from "react-konva";
+import React, { useRef, useState } from "react";
+import { Stage, Layer, Image, Rect as KonvaRect, Group } from "react-konva";
 import useImage from "use-image";
 import "./ImageViewer.css";
 import Konva from "konva";
@@ -31,7 +31,10 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 }) => {
   const [image] = useImage(imageUrl, "anonymous");
 
+  const [brightness, setBrightness] = useState(0);
+
   const stageRef = useRef<Konva.Stage>(null);
+  const brightnessRef = useRef<Konva.Rect>(null);
   const imageRef = useRef<Konva.Image>(null);
   const selectionRef = useRef<Konva.Rect>(null);
 
@@ -64,13 +67,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     containerSize: stageSize,
   });
 
-  const handleBrightnessChange = (value: number) => {
-    if (image && imageRef.current) {
-      imageRef.current.cache();
-      imageRef.current.brightness(value);
-    }
-  };
-
   return (
     <div
       ref={containerRef}
@@ -79,9 +75,8 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
       onMouseLeave={handleBlur}>
       <BrightnessControls
         min={0}
-        max={1}
-        step={0.01}
-        onBrightnessChange={handleBrightnessChange}
+        max={0.5}
+        onBrightnessChange={setBrightness}
       />
       <StateIndicators
         isZooming={isZooming}
@@ -113,7 +108,16 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             perfectDrawEnabled={false}
-            filters={[Konva.Filters.Brighten]}
+          />
+          <KonvaRect
+            ref={brightnessRef}
+            x={-200}
+            y={-200}
+            width={stageSize.width + 400}
+            height={stageSize.height + 400}
+            fill="white"
+            listening={false}
+            opacity={brightness}
           />
           {isSelecting && (
             <KonvaRect

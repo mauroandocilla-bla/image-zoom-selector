@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { BrightnessIcon } from "../common/icons";
 import Tooltip from "../common/Tooltip";
 import "./BrightnessControls.css";
@@ -7,48 +7,65 @@ interface BrightnessControlsProps {
   onBrightnessChange?: (value: number) => void;
   min?: number;
   max?: number;
-  step?: number;
+  sensitivity?: number;
 }
 
 const BrightnessControls: React.FC<BrightnessControlsProps> = ({
   onBrightnessChange,
   min = 0,
   max = 1,
-  step = 0.01,
+  sensitivity = 0.005,
 }) => {
-  const [showBrightnessSlider, setShowBrightnessSlider] = useState(false);
   const [brightness, setBrightness] = useState(min);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleBrightnessChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    setBrightness(value);
-    onBrightnessChange?.(value);
+  const startXRef = useRef<number | null>(null);
+  const initialBrightnessRef = useRef<number>(brightness);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    startXRef.current = e.clientX;
+    initialBrightnessRef.current = brightness;
+    document.body.style.userSelect = "none";
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (startXRef.current !== null) {
+        const deltaX = moveEvent.clientX - startXRef.current;
+        let newBrightness = initialBrightnessRef.current + deltaX * sensitivity;
+        newBrightness = Math.max(min, Math.min(max, newBrightness));
+        setBrightness(newBrightness);
+        onBrightnessChange?.(newBrightness);
+      }
+    };
+
+    const handleMouseUp = () => {
+      startXRef.current = null;
+      document.body.style.userSelect = "auto";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
   };
 
   return (
-    <div className="brightness-controls">
-      <Tooltip content="Adjust image brightness" position="left">
-        <button
-          className="brightness-button"
-          onClick={() => setShowBrightnessSlider(!showBrightnessSlider)}>
-          <BrightnessIcon />
-        </button>
-      </Tooltip>
-      {showBrightnessSlider && (
-        <div className="brightness-slider-container">
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={brightness}
-            onChange={handleBrightnessChange}
-            className="brightness-slider"
-          />
+    <div className="brightness-controls" ref={containerRef}>
+      <Tooltip
+        content="Hold and drag left or right to adjust brightness"
+        position="left">
+        <div className="brightness-button-wrapper">
+          <button className="brightness-button" onMouseDown={handleMouseDown}>
+            <BrightnessIcon />
+          </button>
+          {brightness > 0 && (
+            <span className="brightness-value">
+              {Math.round(((brightness - min) / (max - min)) * 100)}%
+            </span>
+          )}
         </div>
-      )}
+      </Tooltip>
     </div>
   );
 };
 
-export default BrightnessControls; 
+export default BrightnessControls;
