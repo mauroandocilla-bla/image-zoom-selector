@@ -45,7 +45,7 @@ const StateIndicators: React.FC<StateIndicatorsProps> = ({
         <div className="state-indicators-label">State Indicators</div>
         <div className="indicators-list">
           {indicators.map(({ condition, icon, tooltip }, i) => (
-            <Tooltip content={tooltip} key={i}>
+            <Tooltip content={tooltip} key={i} position="right">
               <div className={`indicator ${condition ? "active" : ""}`}>
                 {icon}
               </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Move, Square, RotateCcw, Info } from 'lucide-react';
+import { Search, Move, Square, RotateCcw, Info, Sun } from 'lucide-react';
 
 interface IconProps {
   className?: string;
@@ -21,6 +21,6 @@ export const ResetIcon: React.FC<IconProps> = ({ className }) => (
   <RotateCcw className={className} size={20} />
 );
 
-export const InfoIcon: React.FC<IconProps> = ({ className }) => (
-  <Info className={className} size={14} />
-); 
+export const BrightnessIcon: React.FC<IconProps> = ({ className }) => (
+  <Sun className={className} size={20} />
+);

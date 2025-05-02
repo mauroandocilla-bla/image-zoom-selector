@@ -1,9 +1,10 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Stage, Layer, Image, Rect as KonvaRect } from "react-konva";
 import useImage from "use-image";
 import "./ImageViewer.css";
 import Konva from "konva";
 import StateIndicators from "./StateIndicators";
+import BrightnessControls from "./BrightnessControls";
 import { useImageZoom } from "../../hooks/image/useImageZoom";
 import { useImageDrag } from "../../hooks/image/useImageDrag";
 import { useImageReset } from "../../hooks/image/useImageReset";
@@ -69,6 +70,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
       className="konva-container"
       onMouseEnter={handleFocus}
       onMouseLeave={handleBlur}>
+      <BrightnessControls />
       <StateIndicators
         isZooming={isZooming}
         isDragging={isDragging}
