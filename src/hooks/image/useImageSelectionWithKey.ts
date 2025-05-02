@@ -2,20 +2,23 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import Konva from "konva";
 import { Rect as SelectionRect, normalizeRect } from "../../utils/image";
 
-interface UseImageSelectionProps {
+interface UseImageSelectionWithKeyProps {
   onSelectStateChange?: (isSelecting: boolean) => void;
+  onSelectionBlob?: (blob: Blob) => void;
   stageRef: React.RefObject<Konva.Stage>;
   imageNodeRef: React.RefObject<Konva.Image>;
   selectionRectRef: React.RefObject<Konva.Rect>;
 }
 
-export const useImageSelection = ({
+export const useImageSelectionWithKey = ({
   onSelectStateChange,
+  onSelectionBlob,
   stageRef,
   imageNodeRef,
   selectionRectRef,
-}: UseImageSelectionProps) => {
+}: UseImageSelectionWithKeyProps) => {
   const [isSelecting, setIsSelecting] = useState(false);
+  const [isComponentFocused, setIsComponentFocused] = useState(false);
   const [selectionRect, setSelectionRect] = useState<SelectionRect>({
     x: 0,
     y: 0,
@@ -28,19 +31,16 @@ export const useImageSelection = ({
   } | null>(null);
 
   const handleStageMouseDown = useCallback(() => {
+    if (!isSelecting) return;
     const stage = stageRef.current;
     if (!stage) return;
 
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    setIsSelecting(true);
-    if (onSelectStateChange) {
-      onSelectStateChange(true);
-    }
     setSelectionStart(pos);
     setSelectionRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
-  }, [stageRef, onSelectStateChange]);
+  }, [isSelecting, stageRef]);
 
   const handleStageMouseMove = useCallback(() => {
     if (!isSelecting || !selectionStart) return;
@@ -64,16 +64,6 @@ export const useImageSelection = ({
 
   const handleStageMouseUp = useCallback(() => {
     if (!isSelecting || !stageRef.current || !imageNodeRef.current) return;
-
-    if (Math.abs(selectionRect.width) < 5 || Math.abs(selectionRect.height) < 5) {
-      setIsSelecting(false);
-      if (onSelectStateChange) {
-        onSelectStateChange(false);
-      }
-      setSelectionStart(null);
-      setSelectionRect({ x: 0, y: 0, width: 0, height: 0 });
-      return;
-    }
 
     const stage = stageRef.current;
     const imageNode = imageNodeRef.current;
@@ -109,10 +99,23 @@ export const useImageSelection = ({
     });
     imageNode.getLayer()?.batchDraw();
 
-    setIsSelecting(false);
-    if (onSelectStateChange) {
-      onSelectStateChange(false);
-    }
+    setTimeout(() => {
+      const sx =
+        ((selection.x - currentX) / currentScale) * scale + imageNode.x();
+      const sy =
+        ((selection.y - currentY) / currentScale) * scale + imageNode.y();
+      const sw = (selection.width / currentScale) * scale;
+      const sh = (selection.height / currentScale) * scale;
+
+      const canvas = stage.toCanvas({ x: sx, y: sy, width: sw, height: sh });
+
+      canvas.toBlob((blob) => {
+        selectionRectRef.current?.visible(true);
+        selectionRectRef.current?.getLayer()?.batchDraw();
+        if (blob && onSelectionBlob) onSelectionBlob(blob);
+      }, "image/png");
+    }, 100);
+
     setSelectionStart(null);
     setSelectionRect({ x: 0, y: 0, width: 0, height: 0 });
   }, [
@@ -121,8 +124,57 @@ export const useImageSelection = ({
     imageNodeRef,
     selectionRectRef,
     selectionRect,
-    onSelectStateChange,
+    onSelectionBlob,
   ]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Shift" && isComponentFocused) {
+        setIsSelecting(true);
+        if (onSelectStateChange) {
+          onSelectStateChange(true);
+        }
+      }
+    },
+    [onSelectStateChange, isComponentFocused]
+  );
+
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setIsSelecting(false);
+        if (onSelectStateChange) {
+          onSelectStateChange(false);
+        }
+      }
+      setSelectionStart(null);
+    },
+    [onSelectStateChange]
+  );
+
+  const handleFocus = useCallback(() => {
+    setIsComponentFocused(true);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setIsComponentFocused(false);
+    setIsSelecting(false);
+    setSelectionStart(null);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [handleKeyDown, handleKeyUp, handleFocus, handleBlur]);
 
   return {
     isSelecting,
@@ -130,5 +182,7 @@ export const useImageSelection = ({
     handleStageMouseDown,
     handleStageMouseMove,
     handleStageMouseUp,
+    handleFocus,
+    handleBlur,
   };
-}; 
+};

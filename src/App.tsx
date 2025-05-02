@@ -5,6 +5,7 @@ import StatePanel from "./components/panels/StatePanel";
 import Instructions from "./components/instructions/Instructions";
 import PreviewPanel from "./components/panels/PreviewPanel";
 import BehaviorPanel from "./components/panels/BehaviorPanel";
+import SimpleImageViewer from "./components/viewer/SimpleImageViewer";
 
 const IMAGE_URL_1 =
   "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049698/1_icb054.jpg";
@@ -56,9 +57,10 @@ const App = () => {
 
       <div className="content-wrapper">
         <div className="grid-container">
-          {IMAGE_URLS.map((imageUrl, index) => (
-            <ImageViewer
-              key={index}
+          {selectedOption === 0 &&
+            IMAGE_URLS.map((imageUrl: string, index: number) => (
+              <ImageViewer
+                key={index}
                 imageUrl={imageUrl}
                 onDragStateChange={setIsDragging}
                 onZoomStateChange={setIsZooming}
@@ -66,8 +68,17 @@ const App = () => {
                 onResetStateChange={setIsResetting}
                 onSelectionBlob={handleSelectionBlob}
               />
-            )
-          )}
+            ))}
+          {selectedOption === 1 &&
+            IMAGE_URLS.map((imageUrl: string, index: number) => (
+              <SimpleImageViewer
+                key={index}
+                imageUrl={imageUrl}
+                onSelectStateChange={setIsSelecting}
+                onSelectionBlob={handleSelectionBlob}
+                onResetStateChange={setIsResetting}
+              />
+            ))}
         </div>
       </div>
     </div>

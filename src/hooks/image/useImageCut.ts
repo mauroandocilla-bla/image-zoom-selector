@@ -1,21 +1,23 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Konva from "konva";
 import { Rect as SelectionRect, normalizeRect } from "../../utils/image";
 
-interface UseImageSelectionProps {
-  onSelectStateChange?: (isSelecting: boolean) => void;
+interface UseImageCutProps {
+  onCutStateChange?: (isCutting: boolean) => void;
+  onSelectionBlob?: (blob: Blob) => void;
   stageRef: React.RefObject<Konva.Stage>;
   imageNodeRef: React.RefObject<Konva.Image>;
   selectionRectRef: React.RefObject<Konva.Rect>;
 }
 
-export const useImageSelection = ({
-  onSelectStateChange,
+export const useImageCut = ({
+  onCutStateChange,
+  onSelectionBlob,
   stageRef,
   imageNodeRef,
   selectionRectRef,
-}: UseImageSelectionProps) => {
-  const [isSelecting, setIsSelecting] = useState(false);
+}: UseImageCutProps) => {
+  const [isCutting, setIsCutting] = useState(false);
   const [selectionRect, setSelectionRect] = useState<SelectionRect>({
     x: 0,
     y: 0,
@@ -34,16 +36,16 @@ export const useImageSelection = ({
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    setIsSelecting(true);
-    if (onSelectStateChange) {
-      onSelectStateChange(true);
+    setIsCutting(true);
+    if (onCutStateChange) {
+      onCutStateChange(true);
     }
     setSelectionStart(pos);
     setSelectionRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
-  }, [stageRef, onSelectStateChange]);
+  }, [stageRef, onCutStateChange]);
 
   const handleStageMouseMove = useCallback(() => {
-    if (!isSelecting || !selectionStart) return;
+    if (!isCutting || !selectionStart) return;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -60,16 +62,13 @@ export const useImageSelection = ({
       width,
       height,
     });
-  }, [isSelecting, selectionStart, stageRef]);
+  }, [isCutting, selectionStart, stageRef]);
 
   const handleStageMouseUp = useCallback(() => {
-    if (!isSelecting || !stageRef.current || !imageNodeRef.current) return;
+    if (!isCutting || !stageRef.current || !imageNodeRef.current) return;
 
+    // Only process selection if there is a significant width and height
     if (Math.abs(selectionRect.width) < 5 || Math.abs(selectionRect.height) < 5) {
-      setIsSelecting(false);
-      if (onSelectStateChange) {
-        onSelectStateChange(false);
-      }
       setSelectionStart(null);
       setSelectionRect({ x: 0, y: 0, width: 0, height: 0 });
       return;
@@ -82,50 +81,38 @@ export const useImageSelection = ({
     selectionRectRef.current?.visible(false);
     selectionRectRef.current?.getLayer()?.batchDraw();
 
-    const stageW = stage.width();
-    const stageH = stage.height();
-    const scale = Math.max(
-      Math.min(stageW / selection.width, stageH / selection.height),
-      imageNode.scaleX() * 2
-    );
-
     const currentScale = imageNode.scaleX();
     const [currentX, currentY] = [imageNode.x(), imageNode.y()];
-    const centerX = selection.x + selection.width / 2;
-    const centerY = selection.y + selection.height / 2;
 
-    let newX = stageW / 2 - ((centerX - currentX) / currentScale) * scale;
-    let newY = stageH / 2 - ((centerY - currentY) / currentScale) * scale;
+    // Calculate the actual coordinates in the image
+    const sx = ((selection.x - currentX) / currentScale) * imageNode.scaleX() + imageNode.x();
+    const sy = ((selection.y - currentY) / currentScale) * imageNode.scaleY() + imageNode.y();
+    const sw = (selection.width / currentScale) * imageNode.scaleX();
+    const sh = (selection.height / currentScale) * imageNode.scaleY();
 
-    const maxX = 0,
-      maxY = 0;
-    const minX = Math.min(0, stageW - imageNode.width() * scale);
-    const minY = Math.min(0, stageH - imageNode.height() * scale);
+    // Create canvas with the selected area
+    const canvas = stage.toCanvas({ x: sx, y: sy, width: sw, height: sh });
 
-    imageNode.scale({ x: scale, y: scale });
-    imageNode.position({
-      x: Math.max(minX, Math.min(newX, maxX)),
-      y: Math.max(minY, Math.min(newY, maxY)),
-    });
-    imageNode.getLayer()?.batchDraw();
+    // Convert to blob
+    canvas.toBlob((blob) => {
+      selectionRectRef.current?.visible(true);
+      selectionRectRef.current?.getLayer()?.batchDraw();
+      if (blob && onSelectionBlob) onSelectionBlob(blob);
+    }, "image/png");
 
-    setIsSelecting(false);
-    if (onSelectStateChange) {
-      onSelectStateChange(false);
-    }
     setSelectionStart(null);
     setSelectionRect({ x: 0, y: 0, width: 0, height: 0 });
   }, [
-    isSelecting,
+    isCutting,
     stageRef,
     imageNodeRef,
     selectionRectRef,
     selectionRect,
-    onSelectStateChange,
+    onSelectionBlob,
   ]);
 
   return {
-    isSelecting,
+    isCutting,
     selectionRect,
     handleStageMouseDown,
     handleStageMouseMove,

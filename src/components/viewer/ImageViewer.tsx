@@ -10,7 +10,7 @@ import ViewportDebug from "./ViewportDebug";
 import { useImageZoom } from "../../hooks/image/useImageZoom";
 import { useImageDrag } from "../../hooks/image/useImageDrag";
 import { useImageReset } from "../../hooks/image/useImageReset";
-import { useImageSelection } from "../../hooks/image/useImageSelection";
+import { useImageSelectionWithKey } from "../../hooks/image/useImageSelectionWithKey";
 import { useImageDimensions } from "../../hooks/image/useImageDimensions";
 import { useResizeObserver } from "../../hooks/ui/useResizeObserver";
 
@@ -57,7 +57,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     handleStageMouseUp,
     handleFocus,
     handleBlur,
-  } = useImageSelection({
+  } = useImageSelectionWithKey({
     onSelectStateChange,
     onSelectionBlob,
     stageRef,
