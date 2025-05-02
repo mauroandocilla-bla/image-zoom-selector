@@ -1,6 +1,6 @@
-import React from 'react';
-import MultiOptionSwitch from '../common/MultiOptionSwitch';
-import './BehaviorPanel.css';
+import React from "react";
+import MultiOptionSwitch from "../common/MultiOptionSwitch";
+import "./BehaviorPanel.css";
 
 interface BehaviorPanelProps {
   selectedOption: number;
@@ -13,7 +13,17 @@ const BehaviorPanel: React.FC<BehaviorPanelProps> = ({
 }) => {
   return (
     <div className="behavior-panel">
-      <h3 className="panel-title">Behavior</h3>
+      <h3 className="panel-title">
+        UX Behavior{" ("}
+        {selectedOption === 0
+          ? "Navigate, Zoom, and Preview"
+          : selectedOption === 1
+          ? "Click & Drag"
+          : selectedOption === 2
+          ? "Mouse Scroll"
+          : "Default"}
+        {")"}
+      </h3>
       <div className="panel-content">
         <MultiOptionSwitch
           options={["1", "2"]}
@@ -25,4 +35,4 @@ const BehaviorPanel: React.FC<BehaviorPanelProps> = ({
   );
 };
 
-export default BehaviorPanel; 
+export default BehaviorPanel;

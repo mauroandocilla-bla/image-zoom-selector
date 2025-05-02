@@ -1,0 +1,1 @@
+export const isValidNumber = (n: number) => Number.isFinite(n) && !Number.isNaN(n);

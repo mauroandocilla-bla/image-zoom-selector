@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo, useState } from "react";
 import { Rect as KonvaRect } from "react-konva";
 import Konva from "konva";
+import { isValidNumber } from "../../utils/number";
 
 interface MiniMapProps {
   stageRef: React.RefObject<Konva.Stage>;
@@ -95,10 +96,10 @@ const MiniMap: React.FC<MiniMapProps> = ({
     const miniMapWidth = 100;
     const ratio =
       prevStateRef.current.imageWidth / prevStateRef.current.imageHeight || 1;
-  
+
     let miniW = miniMapWidth;
     let miniH = miniW / ratio;
-  
+
     return {
       miniW,
       miniH,
@@ -112,11 +113,20 @@ const MiniMap: React.FC<MiniMapProps> = ({
     const { miniW, miniH, miniX, miniY } = miniMapDimensions;
     const state = prevStateRef.current;
 
+    const width =
+      state.width !== 0 ? (containerWidth / state.width) * miniW : 0;
+    const height =
+      state.height !== 0 ? (containerHeight / state.height) * miniH : 0;
+    const x =
+      state.width !== 0 ? miniX + (-state.x / state.width) * miniW : miniX;
+    const y =
+      state.height !== 0 ? miniY + (-state.y / state.height) * miniH : miniY;
+
     return {
-      width: (containerWidth / state.width) * miniW,
-      height: (containerHeight / state.height) * miniH,
-      x: miniX + (-state.x / state.width) * miniW,
-      y: miniY + (-state.y / state.height) * miniH,
+      width: isValidNumber(width) ? width : 0,
+      height: isValidNumber(height) ? height : 0,
+      x: isValidNumber(x) ? x : miniX,
+      y: isValidNumber(y) ? y : miniY,
     };
   }, [miniMapDimensions, containerWidth, containerHeight, updateTrigger]); // Add updateTrigger to dependencies
 

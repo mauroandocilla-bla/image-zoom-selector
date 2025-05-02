@@ -8,6 +8,10 @@ import { useImageCut } from "../../hooks/image/useImageCut";
 import { useImageDimensions } from "../../hooks/image/useImageDimensions";
 import { useResizeObserver } from "../../hooks/ui/useResizeObserver";
 import { useImageReset } from "../../hooks/image/useImageReset";
+import MiniMap from "./MiniMap";
+import BrightnessControls from "./BrightnessControls";
+import StateIndicators from "./StateIndicators";
+import ViewportDebug from "./ViewportDebug";
 
 interface SimpleImageViewerProps {
   imageUrl: string;
@@ -28,11 +32,14 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
 
   const stageRef = useRef<Konva.Stage>(null);
   const imageRef = useRef<Konva.Image>(null);
+  const brightnessRef = useRef<Konva.Rect>(null);
   const selectionRef = useRef<Konva.Rect>(null);
   const cutRef = useRef<Konva.Rect>(null);
 
+  const [brightness, setBrightness] = useState(0);
+
   const { containerRef, size: stageSize } = useResizeObserver();
-  
+
   const {
     isSelecting,
     selectionRect,
@@ -71,20 +78,23 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
     containerSize: stageSize,
   });
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key.toLowerCase() === 'c' && isFocused) {
-      setIsCutting(prev => !prev);
-      if (onSelectStateChange) {
-        onSelectStateChange(!isCutting);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "c" && isFocused) {
+        setIsCutting((prev) => !prev);
+        if (onSelectStateChange) {
+          onSelectStateChange(!isCutting);
+        }
       }
-    }
-  }, [onSelectStateChange, isCutting, isFocused]);
+    },
+    [onSelectStateChange, isCutting, isFocused]
+  );
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
 
@@ -136,9 +146,22 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       style={{
-        cursor: isCutting ? 'crosshair' : 'zoom-in'
-      }}
-    >
+        cursor: isCutting ? "crosshair" : "zoom-in",
+      }}>
+      <BrightnessControls
+        min={0}
+        max={0.5}
+        onBrightnessChange={setBrightness}
+      />
+      <StateIndicators
+        isZooming={false}
+        isDragging={false}
+        isSelecting={isSelecting}
+        isResetting={isResetting}
+      />
+      {process.env.NODE_ENV === "development" && (
+        <ViewportDebug stageRef={stageRef} imageRef={imageRef} />
+      )}
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -147,8 +170,7 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         listening={true}
-        onDblClick={handleDoubleClick}
-      >
+        onDblClick={handleDoubleClick}>
         <Layer>
           <Image
             ref={imageRef}
@@ -159,6 +181,16 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
             height={imageProps.height}
             draggable={false}
             perfectDrawEnabled={false}
+          />
+          <KonvaRect
+            ref={brightnessRef}
+            x={-200}
+            y={-200}
+            width={stageSize.width + 400}
+            height={stageSize.height + 400}
+            fill="white"
+            listening={false}
+            opacity={brightness}
           />
           {isSelecting && !isCutting && (
             <KonvaRect
@@ -176,7 +208,7 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
           )}
           {isCuttingState && isCutting && (
             <Group>
-             {/*  {cutRect.width > 0 && cutRect.height > 0 && (
+              {/*  {cutRect.width > 0 && cutRect.height > 0 && (
                 <Group
                   clipFunc={(ctx) => {
                     ctx.beginPath();
@@ -214,10 +246,18 @@ const SimpleImageViewer: React.FC<SimpleImageViewerProps> = ({
               />
             </Group>
           )}
+          {image && (
+            <MiniMap
+              stageRef={stageRef}
+              imageRef={imageRef}
+              containerWidth={stageSize.width}
+              containerHeight={stageSize.height}
+            />
+          )}
         </Layer>
       </Stage>
     </div>
   );
 };
 
-export default SimpleImageViewer; 
+export default SimpleImageViewer;

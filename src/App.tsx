@@ -45,14 +45,16 @@ const App = () => {
           selectedOption={selectedOption}
           onOptionChange={handleOptionChange}
         />
-        <StatePanel
-          isDragging={isDragging}
-          isZooming={isZooming}
-          isSelecting={isSelecting}
-          isResetting={isResetting}
-          activeViewer={activeViewer}
-        />
-        <Instructions previewUrl={previewUrl} />
+        {process.env.NODE_ENV === "development" && (
+          <StatePanel
+            isDragging={isDragging}
+            isZooming={isZooming}
+            isSelecting={isSelecting}
+            isResetting={isResetting}
+            activeViewer={activeViewer}
+          />
+        )}
+        <Instructions uxBehavior={selectedOption} />
       </div>
 
       <div className="content-wrapper">
