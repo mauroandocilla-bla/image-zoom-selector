@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./styles.css";
-import KonvaViewer from "./components/viewer/KonvaViewer";
+import ImageViewer from "./components/viewer/ImageViewer";
 import StatePanel from "./components/panels/StatePanel";
 import Instructions from "./components/instructions/Instructions";
 import PreviewPanel from "./components/panels/PreviewPanel";
@@ -47,7 +47,7 @@ const App = () => {
       <div className="content-wrapper">
         <div className="grid-container">
           {IMAGE_URLS.map((imageUrl, index) => (
-            <KonvaViewer
+            <ImageViewer
               key={index}
                 imageUrl={imageUrl}
                 onDragStateChange={setIsDragging}

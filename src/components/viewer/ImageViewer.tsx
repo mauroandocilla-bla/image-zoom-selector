@@ -1,17 +1,17 @@
 import React, { useRef } from "react";
 import { Stage, Layer, Image, Rect as KonvaRect } from "react-konva";
 import useImage from "use-image";
-import "./KonvaViewer.css";
+import "./ImageViewer.css";
 import Konva from "konva";
 import StateIndicators from "./StateIndicators";
-import { useZoom } from "../../hooks/image/useImageZoom";
-import { useDrag } from "../../hooks/image/useImageDrag";
-import { useReset } from "../../hooks/image/useImageReset";
-import { useSelection } from "../../hooks/image/useImageSelection";
+import { useImageZoom } from "../../hooks/image/useImageZoom";
+import { useImageDrag } from "../../hooks/image/useImageDrag";
+import { useImageReset } from "../../hooks/image/useImageReset";
+import { useImageSelection } from "../../hooks/image/useImageSelection";
 import { useImageDimensions } from "../../hooks/image/useImageDimensions";
 import { useResizeObserver } from "../../hooks/ui/useResizeObserver";
 
-interface KonvaViewerProps {
+interface ImageViewerProps {
   imageUrl: string;
   onDragStateChange?: (isDragging: boolean) => void;
   onZoomStateChange?: (isZooming: boolean) => void;
@@ -20,7 +20,7 @@ interface KonvaViewerProps {
   onSelectionBlob?: (blob: Blob) => void;
 }
 
-const KonvaViewer: React.FC<KonvaViewerProps> = ({
+const ImageViewer: React.FC<ImageViewerProps> = ({
   imageUrl,
   onDragStateChange,
   onZoomStateChange,
@@ -33,10 +33,10 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
   const stageRef = useRef<Konva.Stage>(null);
   const imageNodeRef = useRef<Konva.Image>(null);
   const selectionRectRef = useRef<Konva.Rect>(null);
-  const { isZooming, handleWheel } = useZoom({ onZoomStateChange });
+  const { isZooming, handleWheel } = useImageZoom({ onZoomStateChange });
   const { isDragging, handleDragMove, handleDragStart, handleDragEnd } =
-    useDrag({ onDragStateChange });
-  const { isResetting, handleDoubleClick } = useReset({
+    useImageDrag({ onDragStateChange });
+  const { isResetting, handleDoubleClick } = useImageReset({
     onResetStateChange,
     imageNodeRef,
     stageRef,
@@ -50,7 +50,7 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
     handleStageMouseUp,
     handleFocus,
     handleBlur,
-  } = useSelection({
+  } = useImageSelection({
     onSelectStateChange,
     onSelectionBlob,
     stageRef,
@@ -120,4 +120,4 @@ const KonvaViewer: React.FC<KonvaViewerProps> = ({
   );
 };
 
-export default KonvaViewer;
+export default ImageViewer;

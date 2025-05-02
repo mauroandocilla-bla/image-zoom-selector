@@ -3,13 +3,13 @@ import { useTemporaryState } from "../useTemporaryState";
 import { calculateCenterPosition } from "../../utils/image";
 import Konva from "konva";
 
-interface UseResetProps {
+interface UseImageResetProps {
   onResetStateChange?: (isResetting: boolean) => void;
   imageNodeRef: React.RefObject<Konva.Image>;
   stageRef: React.RefObject<Konva.Stage>;
 }
 
-export const useReset = ({ onResetStateChange, imageNodeRef, stageRef }: UseResetProps) => {
+export const useImageReset = ({ onResetStateChange, imageNodeRef, stageRef }: UseImageResetProps) => {
   const [isResetting, activateResetting] = useTemporaryState();
 
   useEffect(() => {

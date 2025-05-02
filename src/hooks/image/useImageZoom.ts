@@ -7,11 +7,11 @@ import {
   calculatePosition,
 } from "../../utils/image";
 
-interface UseZoomProps {
+interface UseImageZoomProps {
   onZoomStateChange?: (isZooming: boolean) => void;
 }
 
-export const useZoom = ({ onZoomStateChange }: UseZoomProps = {}) => {
+export const useImageZoom = ({ onZoomStateChange }: UseImageZoomProps = {}) => {
   const [isZooming, activateZooming] = useTemporaryState();
 
   useEffect(() => {

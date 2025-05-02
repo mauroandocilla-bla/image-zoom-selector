@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 import { KonvaEventObject } from 'konva/lib/Node';
 
-interface UseDragProps {
+interface UseImageDragProps {
   onDragStateChange?: (isDragging: boolean) => void;
 }
 
-export const useDrag = ({ onDragStateChange }: UseDragProps = {}) => {
+export const useImageDrag = ({ onDragStateChange }: UseImageDragProps = {}) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragMove = useCallback((e: KonvaEventObject<DragEvent>) => {

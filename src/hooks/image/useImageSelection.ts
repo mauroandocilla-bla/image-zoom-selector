@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import Konva from "konva";
 import { Rect as SelectionRect, normalizeRect } from "../../utils/image";
 
-interface UseSelectionProps {
+interface UseImageSelectionProps {
   onSelectStateChange?: (isSelecting: boolean) => void;
   onSelectionBlob?: (blob: Blob) => void;
   stageRef: React.RefObject<Konva.Stage>;
@@ -10,13 +10,13 @@ interface UseSelectionProps {
   selectionRectRef: React.RefObject<Konva.Rect>;
 }
 
-export const useSelection = ({
+export const useImageSelection = ({
   onSelectStateChange,
   onSelectionBlob,
   stageRef,
   imageNodeRef,
   selectionRectRef,
-}: UseSelectionProps) => {
+}: UseImageSelectionProps) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [isComponentFocused, setIsComponentFocused] = useState(false);
   const [selectionRect, setSelectionRect] = useState<SelectionRect>({
