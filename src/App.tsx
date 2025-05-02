@@ -4,6 +4,7 @@ import ImageViewer from "./components/viewer/ImageViewer";
 import StatePanel from "./components/panels/StatePanel";
 import Instructions from "./components/instructions/Instructions";
 import PreviewPanel from "./components/panels/PreviewPanel";
+import BehaviorPanel from "./components/panels/BehaviorPanel";
 
 const IMAGE_URL_1 =
   "https://res.cloudinary.com/dzn9djhjp/image/upload/v1746049698/1_icb054.jpg";
@@ -23,6 +24,7 @@ const App = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [activeViewer, setActiveViewer] = useState(1);
+  const [selectedOption, setSelectedOption] = useState(0);
 
   const handleSelectionBlob = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
@@ -30,10 +32,18 @@ const App = () => {
     return () => URL.revokeObjectURL(url);
   };
 
+  const handleOptionChange = (index: number) => {
+    setSelectedOption(index);
+  };
+
   return (
     <div className="container">
       <div className="sidebar">
         <PreviewPanel previewUrl={previewUrl} defaultImageUrl={IMAGE_URL_1} />
+        <BehaviorPanel
+          selectedOption={selectedOption}
+          onOptionChange={handleOptionChange}
+        />
         <StatePanel
           isDragging={isDragging}
           isZooming={isZooming}

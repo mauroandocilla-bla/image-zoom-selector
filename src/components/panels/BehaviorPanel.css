@@ -1,0 +1,13 @@
+.behavior-panel {
+  display: block;
+}
+
+.panel-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: black;
+}
+
+.panel-content {
+  width: 100%;
+} 
